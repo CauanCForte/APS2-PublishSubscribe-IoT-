@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// "Banco de dados" mockado
+const userDatabase = {
+  "cauan_painel": { password: "cauan", role: "painel" },
+  "cauan_pager": { password: "cauan", role: "pager" },
+  "lucca_painel": { password: "lucca", role: "painel" },
+  "lucca_pager": { password: "lucca", role: "pager" },
+};
+
 function Login() {
   const navigate = useNavigate();
   
@@ -9,13 +17,24 @@ function Login() {
   
   const handleLogin = (e) => {
     e.preventDefault();
-    // Validação simples (mock). Em uma aplicação real, faria requisição ao backend.
-    if (username && password) {
-      // Poderia salvar tokens no localStorage, etc.
-      navigate('/dashboard'); 
-    } else {
+
+    // Verifica se "username" existe no "banco"
+    const userData = userDatabase[username];
+
+    // Se não existir ou a senha não bater, exibe erro
+    if (!userData || userData.password !== password) {
       alert('Usuário ou senha inválidos.');
+      return;
     }
+
+    // Determinamos a 'role' do usuário
+    const userRole = userData.role;
+
+    // Armazenamos esse papel em localStorage (ou em contexto global)
+    localStorage.setItem('userRole', userRole);
+
+    // Redireciona para o dashboard
+    navigate('/dashboard'); 
   };
   
   return (

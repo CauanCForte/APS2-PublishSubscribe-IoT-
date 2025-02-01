@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import mqtt from 'mqtt';
 
 function Dashboard() {
+
+  const role = localStorage.getItem('userRole'); 
+
   // Dados mockados de camas
   const beds = [
     { id: 1, paciente: 'Paciente A' },
@@ -71,7 +74,7 @@ function Dashboard() {
                 backgroundColor: hasAlert ? 'red' : 'white',
                 color: hasAlert ? 'white' : 'black'
               }}
-            >
+            >{role === 'painel' ? (
               <Link
                 to={`/bed/${bed.id}`}
                 style={{
@@ -81,7 +84,11 @@ function Dashboard() {
                 }}
               >
                 Cama {bed.id} - {bed.paciente}
-              </Link>
+              </Link>) : (
+                <>
+                  Cama {bed.id} - {bed.paciente}
+                </>
+              )}
               {hasAlert && (
                 <div style={{ marginTop: '10px' }}>
                   <strong>Alertas:</strong>
