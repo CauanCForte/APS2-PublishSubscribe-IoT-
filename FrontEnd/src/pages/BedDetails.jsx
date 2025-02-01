@@ -27,7 +27,7 @@ function BedDetails() {
 
     client.on('message', (topic, message) => {
       const msg = message.toString();
-      // Se a mensagem for dos dados dos sensores (tópico: paciente/{bedId}/{sensor})
+      // Se a mensagem for dos dados dos sensores (paciente/{bedId}/{sensor})
       if (topic.startsWith(`paciente/${bedId}/`)) {
         const parts = topic.split('/');
         if (parts.length >= 3) {
@@ -35,7 +35,7 @@ function BedDetails() {
           setSensorData(prev => ({ ...prev, [sensorKey]: msg }));
         }
       }
-      // Se a mensagem for de alerta (tópico: alertas_criticos/paciente/{bedId}/{sensor})
+      // Se a mensagem for de alerta (alertas_criticos/paciente/{bedId}/{sensor})
       else if (topic.startsWith(`alertas_criticos/paciente/${bedId}/`)) {
         const parts = topic.split('/');
         if (parts.length >= 4) {
@@ -45,7 +45,7 @@ function BedDetails() {
             message: msg,
             timestamp: new Date().toLocaleTimeString()
           };
-          // Acumula o alerta (não substitui os anteriores)
+          
           setAlerts(prev => [...prev, alertObj]);
         }
       }

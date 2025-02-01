@@ -18,7 +18,7 @@ function MqttSubscriber() {
           console.error('Erro na inscrição:', err);
         }
       });
-      // Opcional: inscrever para os alertas críticos, se desejar
+      // Inscrever para os alertas críticos
       client.subscribe('alertas_criticos/paciente/#', (err) => {
         if (!err) {
           console.log('Inscrito no tópico alertas_criticos/paciente/#');

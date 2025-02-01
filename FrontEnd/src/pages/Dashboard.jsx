@@ -10,7 +10,7 @@ function Dashboard() {
     { id: 3, paciente: 'Paciente C' },
   ];
 
-  // Estado para armazenar os alertas críticos organizados por cama.
+  // Estado para armazenar os alertas críticos por cama.
   // Estrutura: { [bedId]: { [sensor]: alertMessage } }
   const [alertsByBed, setAlertsByBed] = useState({});
 
@@ -19,7 +19,7 @@ function Dashboard() {
 
     client.on('connect', () => {
       console.log('Connected to MQTT broker');
-      // Inscreve-se no tópico de alertas críticos para todas as camas
+      // Inscreve no tópico de alertas críticos para todas as camas
       client.subscribe('alertas_criticos/paciente/#', (err) => {
         if (err) {
           console.error('Subscription error:', err);
@@ -30,7 +30,7 @@ function Dashboard() {
     client.on('message', (topic, message) => {
       const msg = message.toString();
       console.log('Received message:', topic, msg);
-      // Tópico esperado: alertas_criticos/paciente/{bedId}/{sensor}
+      //Esperado: alertas_criticos/paciente/{bedId}/{sensor}
       const parts = topic.split('/');
       if (parts.length >= 4) {
         const bedId = parts[2];

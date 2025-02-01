@@ -6,10 +6,9 @@ import paho.mqtt.client as mqtt
 BROKER = "broker.hivemq.com"
 PORT = 1883
 
-# IDs dos pacientes
 PATIENTS = [1, 2, 3]
 
-# Dicionário que mapeia cada sensor à função que gera seu valor
+# Simulador de sensores
 sensor_generators = {
     "frequencia_cardiaca": lambda: random.randint(50, 150),
     "saturacao_oxigenio": lambda: round(random.uniform(85, 100), 1),
@@ -20,17 +19,19 @@ sensor_generators = {
     "capnografia": lambda: round(random.uniform(30, 45), 1)
 }
 
+# Gerador de sensores simulados
 def generate_sensor_value(sensor):
     generator = sensor_generators.get(sensor, lambda: None)
     return generator()
 
-# Dicionário com condições críticas: para cada sensor, a função que testa a condição e a mensagem de alerta
+# Condições críticas determinadas
 critical_conditions = {
     "frequencia_cardiaca": (lambda value: value > 120, "Taquicardia detectada"),
     "saturacao_oxigenio": (lambda value: value < 90, "Baixa saturação de oxigênio"),
     "temperatura": (lambda value: value > 38.5, "Febre alta detectada")
 }
 
+# Verificador de condições críticas 
 def verify_critical_conditions(sensor, value):
     condition = critical_conditions.get(sensor)
     return [condition[1]] if condition and condition[0](value) else []
