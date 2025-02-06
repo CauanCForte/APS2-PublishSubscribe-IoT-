@@ -47,16 +47,20 @@ try:
                 value = generate_sensor_value(sensor)
                 topic = f"paciente/{patient}/{sensor}"
                 payload = str(value)
+
                 client.publish(topic, payload, qos=1, retain=True)
+
                 print(f"Paciente {patient} - {sensor}: {payload}")
                 
                 alerts = verify_critical_conditions(sensor, value)
                 for alert in alerts:
-                    alert_payload = f"{sensor}: {alert}"
+                    alert_payload = f"{sensor}: {alert} ({value})"
                     alert_topic = f"alertas_criticos/paciente/{patient}/{sensor}"
                     client.publish(alert_topic, alert_payload, qos=2, retain=True)
                     print(f"Alerta para Paciente {patient} - {sensor}: {alert_payload}")
-        time.sleep(5)
+
+            time.sleep(5)
+        time.sleep(10)
 except KeyboardInterrupt:
     print("Simulação interrompida pelo usuário.")
     client.disconnect()

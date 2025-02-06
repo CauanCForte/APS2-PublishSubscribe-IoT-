@@ -14,7 +14,6 @@ function Dashboard() {
   ];
 
   // Estado para armazenar os alertas críticos por cama.
-  // Estrutura: { [bedId]: { [sensor]: alertMessage } }
   const [alertsByBed, setAlertsByBed] = useState({});
 
   useEffect(() => {

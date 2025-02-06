@@ -2,18 +2,31 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import mqtt from 'mqtt';
 
+// Defina a ordem fixa dos sensores, se quiser manter a lógica anterior
+const SENSOR_ORDER = [
+  "frequencia_cardiaca",
+  "saturacao_oxigenio",
+  "pressao_arterial_invasiva",
+  "pressao_arterial_nao_invasiva",
+  "frequencia_respiratoria",
+  "temperatura",
+  "capnografia"
+];
+
 function BedDetails() {
   const { bedId } = useParams();
-  // Estado para armazenar os dados dos sensores: { [sensor]: value }
+  
+  // Estado para armazenar os dados dos sensores (normal)
   const [sensorData, setSensorData] = useState({});
-  // Estado para armazenar os alertas críticos em um array (cada alerta é acumulado)
-  const [alerts, setAlerts] = useState([]);
+  
+  // Em vez de um array de alertas, criamos um OBJETO
+  // Estrutura: { [sensorName]: { message, timestamp } }
+  const [alertsBySensor, setAlertsBySensor] = useState({});
 
   useEffect(() => {
     const client = mqtt.connect('ws://broker.hivemq.com:8000/mqtt');
 
     client.on('connect', () => {
-      // Inscreve-se para dados dos sensores e alertas da cama específica
       const sensorTopic = `paciente/${bedId}/#`;
       const alertTopic = `alertas_criticos/paciente/${bedId}/#`;
       client.subscribe([sensorTopic, alertTopic], (err) => {
@@ -27,26 +40,32 @@ function BedDetails() {
 
     client.on('message', (topic, message) => {
       const msg = message.toString();
-      // Se a mensagem for dos dados dos sensores (paciente/{bedId}/{sensor})
+
+      // Se for dados normais do sensor: paciente/{bedId}/{sensor}
       if (topic.startsWith(`paciente/${bedId}/`)) {
         const parts = topic.split('/');
         if (parts.length >= 3) {
-          const sensorKey = parts[2]; // Considera apenas o nome do sensor
+          const sensorKey = parts[2];
           setSensorData(prev => ({ ...prev, [sensorKey]: msg }));
         }
       }
-      // Se a mensagem for de alerta (alertas_criticos/paciente/{bedId}/{sensor})
+      // Se for alerta crítico: alertas_criticos/paciente/{bedId}/{sensor}
       else if (topic.startsWith(`alertas_criticos/paciente/${bedId}/`)) {
         const parts = topic.split('/');
         if (parts.length >= 4) {
-          const sensor = parts[3];
+          const sensorName = parts[3];
+          
+          // Cria objeto com a mensagem e o timestamp atual
           const alertObj = {
-            sensor,
             message: msg,
             timestamp: new Date().toLocaleTimeString()
           };
-          
-          setAlerts(prev => [...prev, alertObj]);
+
+          // Atualiza "alertsBySensor" sem acumular duplicados
+          setAlertsBySensor(prev => ({
+            ...prev,
+            [sensorName]: alertObj  // sobrescreve se já existir esse sensor
+          }));
         }
       }
     });
@@ -62,35 +81,61 @@ function BedDetails() {
       
       <div>
         <h3>Dados dos Sensores</h3>
-        {Object.keys(sensorData).length === 0 ? (
-          <p>Sem dados disponíveis.</p>
-        ) : (
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {Object.entries(sensorData).map(([sensor, value], idx) => (
-              <li key={idx} style={{ marginBottom: '5px', padding: '5px', backgroundColor: '#f4f4f4' }}>
-                <strong>{sensor}:</strong> {value}
-              </li>
-            ))}
-          </ul>
-        )}
+        {SENSOR_ORDER.map((sensorName) => {
+          const value = sensorData[sensorName];
+          return (
+            <div
+              key={sensorName}
+              style={{
+                marginBottom: '5px',
+                padding: '5px',
+                backgroundColor: '#f4f4f4',
+              }}
+            >
+              <strong>{sensorName}:</strong>{' '}
+              {value !== undefined ? value : 'Sem dados ainda'}
+            </div>
+          );
+        })}
       </div>
       
       <div style={{ marginTop: '20px' }}>
         <h3>Alertas Críticos</h3>
-        {alerts.length === 0 ? (
+        {Object.keys(alertsBySensor).length === 0 ? (
           <p>Sem alertas críticos.</p>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0 }}>
-            {alerts.map((alert, idx) => (
-              <li key={idx} style={{ backgroundColor: 'red', color: 'white', padding: '8px', marginBottom: '5px', borderRadius: '5px' }}>
-                <strong>{alert.sensor}:</strong> {alert.message} <em>({alert.timestamp})</em>
+            {Object.entries(alertsBySensor).map(([sensorName, alertObj]) => (
+              <li
+                key={sensorName}
+                style={{
+                  backgroundColor: 'red',
+                  color: 'white',
+                  padding: '8px',
+                  marginBottom: '5px',
+                  borderRadius: '5px'
+                }}
+              >
+                <strong>{sensorName}:</strong> {alertObj.message}{' '}
+                <em>- Hora:({alertObj.timestamp})</em>
               </li>
             ))}
           </ul>
         )}
       </div>
       
-      <Link to="/dashboard" style={{ textDecoration: 'none', padding: '8px 12px', backgroundColor: '#333', color: '#fff', borderRadius: '4px', display: 'inline-block', marginTop: '20px' }}>
+      <Link
+        to="/dashboard"
+        style={{
+          textDecoration: 'none',
+          padding: '8px 12px',
+          backgroundColor: '#333',
+          color: '#fff',
+          borderRadius: '4px',
+          display: 'inline-block',
+          marginTop: '20px'
+        }}
+      >
         Voltar para o Dashboard
       </Link>
     </div>
@@ -98,3 +143,4 @@ function BedDetails() {
 }
 
 export default BedDetails;
+
